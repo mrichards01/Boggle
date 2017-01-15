@@ -12,22 +12,15 @@ max_width = 4
 dictionary_filename = "words.txt"
 
 def display_board(board):
-	header = ""
-	for x in range(0,max_width+2):
-		header+="# "
-	print header
+	header = "{0} ".format("# "*(max_width+2))
+	print (header)
 
 	for row in board:
-		current_line ="# "
-		for value in row:
-			current_line+=value+" "
-		current_line+="#"
-		print current_line
+		current_line ="{0}{1}{2}".format("# "," ".join(row)," #")
+		print (current_line)
 
-	footer = ""
-	for x in range(0,max_width+2):
-		footer+="# "
-	print footer
+	footer = "{0} ".format("# "*(max_width+2))
+	print (footer)
 
 def is_a_word(dictionary_set, word):
 	return True if check_word_score(dictionary_set,word)>0 else False
@@ -195,13 +188,13 @@ display_board(board)
 start = time.time()
 solutions = pruned_implementation(board)
 end = time.time()
-print "Time Elapsed: ",end - start
+print ("Time Elapsed: ",end - start)
 max_score = 0
 total_score = 0
 for sol in solutions:
 	max_score = len(sol) if len(sol)>max_score else max_score
 	total_score+=len(sol)
-	print sol
-print "Total Highest Score: ",total_score
-print "Highest Scoring word: ",max_score
+	print (sol)
+print ("Total Highest Score: ",total_score)
+print ("Highest Scoring word: ",max_score)
 	
