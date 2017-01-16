@@ -71,15 +71,22 @@ def load_dictionary_set():
 	dictionary = set(dictionary_string.split("\n"))
 	return dictionary
 
+def get_all_letters_on_board(board):
+	letters = []
+	for x in range(0, max_width):
+		for y in range(0, max_height):
+			letters.append(board[x][y])
+	return letters
+
 #method maps all words to a nested dictionary of letters.
 #each key maps to a letter at any given position in the current word
-def make_prefix_tree(dictionary, these_letters_only=None):
+def make_prefix_tree(dictionary):
 	prefix_tree = {}
 	for word in dictionary:
 		current_subtree = prefix_tree
 		for letter in word:
 			# if letter cannot be found on the board, do not add anymore
-			if these_letters_only!=None and letter not in these_letters_only:
+			if letters_on_board!=None and letter not in letters_on_board:
 				break
 
 			#fetch child letter, if there is none then create one
@@ -90,7 +97,7 @@ def make_prefix_tree(dictionary, these_letters_only=None):
 	return prefix_tree
 
 #function returns all words found based on the current tile. Words are returned as a set
-def check_tiles_and_neighbours_for_words(board, dictionary_set, current_string, current_tile, visited, prefix_tree=None):
+def check_tiles_and_neighbours_for_words(board, current_string, current_tile, visited, prefix_tree=None):
 	#if current string has already been visited - base case to stop checking
 	x = current_tile[0]
 	y = current_tile[1]
@@ -111,11 +118,11 @@ def check_tiles_and_neighbours_for_words(board, dictionary_set, current_string, 
 			return set()
 		if len(current_string)>2:
 			#If the current root is a word then add the word to the set
-			if is_a_word(dictionary_set, current_string)==True:
+			if is_a_word(words, current_string)==True:
 				#print current_string
 				found_words.add(current_string)
 	else:	
-		found_words = set([current_string]) if is_a_word(dictionary_set, current_string)==True else set()
+		found_words = set([current_string]) if is_a_word(words, current_string)==True else set()
 
 	adjacent_tiles = get_adjacent_tiles(x,y)
 
@@ -127,11 +134,10 @@ def check_tiles_and_neighbours_for_words(board, dictionary_set, current_string, 
 		tile_y = tile[1]
 		letter = board[tile_x][tile_y]
 		new_proposed_string = current_string+letter
-		found_words = found_words.union(check_tiles_and_neighbours_for_words(board, dictionary_set, new_proposed_string,tile,copy.deepcopy(visited),prefix_subtree))
+		found_words = found_words.union(check_tiles_and_neighbours_for_words(board, new_proposed_string,tile,copy.deepcopy(visited),prefix_subtree))
 	return found_words
 
 def naive_implementation(board):
-	words = load_dictionary_set()
 	# to find all possible solutions:
 	# 1) iterate over each tile as a starting character
 	# 2) with the current tile, check if this tile and subsequent adjacent tiles form any words
@@ -150,11 +156,10 @@ def naive_implementation(board):
 		
 		for y in range(0,len(values)):
 			current_letter = values[y]
-			check_tiles_and_neighbours_for_words(board, words, current_letter,(x,y), copy.deepcopy(visited_tiles))
+			check_tiles_and_neighbours_for_words(boar, current_letter,(x,y), copy.deepcopy(visited_tiles))
 
 #method uses backtracing/pruning so that recursive calls are halted when the current string is not a substring of any possible word
 def pruned_implementation(board):
-	words = load_dictionary_set()
 	# to find all possible solutions:
 	# 1) iterate over each tile as a starting character
 	# 2) with each tile, check if this tile and subsequent adjacent tiles form any words
@@ -178,13 +183,15 @@ def pruned_implementation(board):
 		values = board[x]
 		for y in range(0,len(values)):
 			current_letter = values[y]
-			all_found = all_found.union(check_tiles_and_neighbours_for_words(board, words, current_letter, (x,y), copy.deepcopy(visited_tiles),prefix_tree))			
+			all_found = all_found.union(check_tiles_and_neighbours_for_words(board, current_letter, (x,y), copy.deepcopy(visited_tiles),prefix_tree))			
 	return all_found
 
 # main code
 board = randomize_new_board()
 display_board(board)
 start = time.time()
+letters_on_board = set(get_all_letters_on_board(board))
+words = load_dictionary_set()
 solutions = pruned_implementation(board)
 end = time.time()
 print ("Time Elapsed: ",end - start)
