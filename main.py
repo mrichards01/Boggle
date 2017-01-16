@@ -31,41 +31,36 @@ def check_word_score(dictionary_set, word):
 		return len(word)
 	return 0
 
+def get_tile(x,y, existing_tiles):
+	if x<0 or y<0:
+		return
+	if x>=max_width or y>=max_height:
+		return
+	existing_tiles.append((x,y))
+
 def get_adjacent_tiles(x,y):
 	adjacent_tiles = []
-	adjacent_tiles.append((x-1,y))
-	adjacent_tiles.append((x-1,y+1))
-	adjacent_tiles.append((x-1,y-1))
-	adjacent_tiles.append((x,y+1))
-	adjacent_tiles.append((x,y-1))
-	adjacent_tiles.append((x+1,y))
-	adjacent_tiles.append((x+1,y+1))
-	adjacent_tiles.append((x+1,y-1))
-	new_tiles = []
-	for tile in adjacent_tiles:
-		#get smallest x/y value
-		smallest = min(tile)
-		largest = max(tile)
-		if smallest>=0 and largest<len(board):
-			new_tiles.append(tile)
-	return new_tiles
+	for i in range (x-1,x+2):
+		for j in range (y-1,y+2):
+			if i==x and j==y:
+				continue
+			get_tile(i,j, adjacent_tiles)
+	return adjacent_tiles
 
 #procedure randomly generates a board to work with
 def randomize_new_board():
 	board = []
-	used_chars = {}
-	for column in range(0,max_width):
-		row_values = []
-		for row in range(0,max_height):
+	used_chars = set()
+	for x in range(0,max_width):
+		values = []
+		for y in range(0,max_height):
 			random_letter = random.choice(string.ascii_lowercase)
 			while random_letter in used_chars:
 				random_letter = random.choice(string.ascii_lowercase)
-				#substitute Q with QU as intended in boggle
-			#if random_letter=="q":
-			#	random_letter= "qu"
-			row_values.append(random_letter)
-			used_chars[random_letter]=True
-		board.append(row_values)
+			# boggle normally substitutes q with qu. This implementation ignores this.
+			values.append(random_letter)
+			used_chars.add(random_letter)
+		board.append(values)
 
 	return board
 
@@ -76,18 +71,22 @@ def load_dictionary_set():
 	dictionary = set(dictionary_string.split("\n"))
 	return dictionary
 
-#method maps all words to a nested dictionary of letters each corresponding prefix to words. Prefixs could be seen
-def make_prefix_tree(dictionary):
+#method maps all words to a nested dictionary of letters.
+#each key maps to a letter at any given position in the current word
+def make_prefix_tree(dictionary, these_letters_only=None):
 	prefix_tree = {}
 	for word in dictionary:
 		current_subtree = prefix_tree
 		for letter in word:
+			# if letter cannot be found on the board, do not add anymore
+			if these_letters_only!=None and letter not in these_letters_only:
+				break
+
 			#fetch child letter, if there is none then create one
-			prefix_entry = current_subtree.get(letter)
-			if prefix_entry is None:
+			if letter not in current_subtree:
 				current_subtree[letter] = {}
-				prefix_entry = current_subtree.get(letter)
-			current_subtree = prefix_entry
+
+			current_subtree = current_subtree[letter]
 	return prefix_tree
 
 #function returns all words found based on the current tile. Words are returned as a set
@@ -107,7 +106,7 @@ def check_tiles_and_neighbours_for_words(board, dictionary_set, current_string, 
 	if prefix_tree is not None:
 		
 		prefix_subtree = prefix_tree.get(current_letter)
-		#back trace early if current string is not a prefix of the word to seek
+		# back trace early if current string is not a prefix of the word to seek
 		if prefix_subtree is None:
 			return set()
 		if len(current_string)>2:
