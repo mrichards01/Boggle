@@ -116,10 +116,6 @@ class BoggleSolver:
 			return len(word)
 		return 0
 
-	def get_tile(self, x, y, existing_tiles):
-
-		existing_tiles.append((x,y))
-
 	def get_adjacent_tiles(self,x,y):
 		adjacent_tiles = []
 		for i in range (x-1,x+2):
