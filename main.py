@@ -15,7 +15,7 @@ while True:
 	start = time.time()
 	solver.solve()
 	end = time.time()
-	print ("\n\rTime Elapsed to initialise and read dictionary: ",init_end - init_start)
-	print ("Time Elapsed to find solutions: ",end - start)
-	print ("Total Time to solve: ",(init_end- init_start)+(end-start))
+	print ("\n\rTime Elapsed to initialise and read dictionary (seconds): ",init_end - init_start)
+	print ("Time Elapsed to find solutions (seconds): ",end - start)
+	print ("Total Time to solve (seconds): ",(init_end- init_start)+(end-start))
 

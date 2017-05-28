@@ -13,7 +13,7 @@ class BoggleSolver:
 			self._words = self.load_dictionary_set(word_file)
 		except IOError:
 			raise 
-		self.board = []
+		self._board = []
 		self._letters_on_board = self.init_new_board()
 
 	def display_board(self):
@@ -45,8 +45,8 @@ class BoggleSolver:
 		dictionary = set(dictionary_string.split("\n"))
 		return dictionary
 
-	#method maps all words to a nested dictionary of letters.
-	#each key maps to a letter at any given position in the current word
+	#method maps all words to a nested dictionary of letters or as a tri
+	#each key map at each level is a letter where the current height is the given position in the word
 	def make_prefix_tree(self, dictionary):
 		prefix_tree = {}
 		for word in dictionary:
@@ -73,7 +73,7 @@ class BoggleSolver:
 		x = current_tile[0]
 		y = current_tile[1]
 		
-		if visited[x][y]==True:
+		if current_tile in visited:
 			return set()
 
 		found_words = set()
@@ -97,8 +97,7 @@ class BoggleSolver:
 			found_words = set([current_string]) if self.is_a_word(current_string)==True else set()
 
 		adjacent_tiles = self.get_adjacent_tiles(x,y)
-
-		visited[x][y]=True
+		visited.add(current_tile)
 		# get any words in neighbouring tiles
 		for tile in adjacent_tiles:
 			tile_x = tile[0]
@@ -106,7 +105,7 @@ class BoggleSolver:
 			letter = self._board[tile_x][tile_y]
 			new_proposed_string = "{}{}".format(current_string, letter)
 			# union current words found and those found in any neighbours
-			found_words = found_words.union(self.check_tiles_and_neighbours_for_words(new_proposed_string, tile, copy.deepcopy(visited), prefix_subtree))
+			found_words = found_words.union(self.check_tiles_and_neighbours_for_words(new_proposed_string, tile, set(visited), prefix_subtree))
 
 		return found_words
 
@@ -148,33 +147,23 @@ class BoggleSolver:
 
 	def naive_implementation(self):
 		# brute force all letters 
-		visited_tiles = {}
+		all_found = set()
 		for x in range(0,len(self._board)):
-			visited_tiles[x]={}
-			for y in range(0,len(self._board)):
-				visited_tiles[x][y]=False
-
-		for x in range(0,len(board)):
-			values = board[x]
+			values = self._board[x]
 			
 			for y in range(0,len(values)):
 				current_letter = values[y]
-				self.check_tiles_and_neighbours_for_words(current_letter, (x,y), copy.deepcopy(visited_tiles), None)
+				all_found = all_found.union(self.check_tiles_and_neighbours_for_words(current_letter, (x,y), set(), None))
+		return all_found
 
 	#method uses backtracing/pruning so that recursive calls are halted when the current string is not a substring of any possible word
 	def pruned_implementation(self):
 		prefix_tree = self.make_prefix_tree(self._words)
-
-		visited_tiles = {}
-		for x in range(0,len(self._board)):
-			visited_tiles[x] = {}
-			for y in range(0,len(self._board)):
-				visited_tiles[x][y]=False
 		
 		all_found = set()
 		for x in range(0,len(self._board)):
 			values = self._board[x]
 			for y in range(0,len(values)):
 				current_letter = values[y]
-				all_found = all_found.union(self.check_tiles_and_neighbours_for_words(current_letter, (x,y), copy.deepcopy(visited_tiles), prefix_tree))
+				all_found = all_found.union(self.check_tiles_and_neighbours_for_words(current_letter, (x,y), set(), prefix_tree))
 		return all_found
